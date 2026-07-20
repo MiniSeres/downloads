@@ -1,3 +1,3 @@
 # downloads
-to facilitate quick code downloads 
-The script was created entirely using DeepSeek AI. 
+This website was created to help you download scripts faster. 
+The website is partially supported by DeepSeek AI. 
