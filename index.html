@@ -4,14 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Code Downloader</title>
-    
-    <!-- Highlight.js -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
-    
     <style>
-        /* ===== RESET ===== */
         * {
             margin: 0;
             padding: 0;
@@ -29,7 +25,6 @@
             transition: background 0.3s, color 0.3s;
         }
         
-        /* ===== THEMES ===== */
         body.theme-matrix {
             --bg: #0a0f0a;
             --surface: #0f1a0f;
@@ -66,7 +61,6 @@
             --accent: #bd93f9;
             --shadow: 0 8px 32px rgba(189, 147, 249, 0.15);
         }
-        /* default: dark */
         body {
             --bg: #0d1117;
             --surface: #161b22;
@@ -79,7 +73,6 @@
             color: var(--text);
         }
         
-        /* ===== CONTAINER ===== */
         .container {
             width: 100%;
             max-width: 860px;
@@ -91,7 +84,6 @@
             transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
         }
         
-        /* ===== HEADER ===== */
         .header {
             display: flex;
             justify-content: space-between;
@@ -111,7 +103,6 @@
             flex-wrap: wrap;
         }
         
-        /* ===== SETTINGS ===== */
         .settings-toggle {
             background: var(--border);
             color: var(--text);
@@ -177,7 +168,6 @@
             font-size: 14px;
         }
         
-        /* ===== FORM ===== */
         .form-group {
             margin-bottom: 18px;
         }
@@ -213,7 +203,6 @@
             tab-size: 2;
         }
         
-        /* ===== PREVIEW HIGHLIGHT ===== */
         .preview-wrap {
             position: relative;
             margin-top: 6px;
@@ -241,7 +230,6 @@
             word-break: break-word;
         }
         
-        /* ===== DOWNLOAD BTN ===== */
         .download-btn {
             width: 100%;
             padding: 14px;
@@ -267,7 +255,6 @@
             transform: scale(0.97);
         }
         
-        /* ===== RESPONSIVE ===== */
         @media (max-width: 640px) {
             .container {
                 padding: 20px;
@@ -285,7 +272,6 @@
             }
         }
         
-        /* ===== SCROLLBAR ===== */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -305,7 +291,6 @@
 <body>
 
 <div class="container">
-    <!-- HEADER -->
     <div class="header">
         <h1>📦 Code Downloader</h1>
         <div class="header-actions">
@@ -313,7 +298,6 @@
         </div>
     </div>
 
-    <!-- SETTINGS PANEL -->
     <div class="settings-panel" id="settingsPanel">
         <div class="settings-group">
             <label>🎨 Theme:</label>
@@ -330,18 +314,16 @@
         </div>
     </div>
 
-    <!-- FORM -->
     <div class="form-group">
-        <label for="fileName">📄 Tên file (ví dụ: script.js, main.go, style.css)</label>
+        <label for="fileName">📄 Tên file</label>
         <input id="fileName" type="text" placeholder="main.py" value="code.txt" />
     </div>
 
     <div class="form-group">
-        <label for="codeInput">✏️ Viết code của bro:</label>
+        <label for="codeInput">✏️ Viết code</label>
         <textarea id="codeInput" placeholder="Paste hoặc viết code vào đây...">print("Hello, bro! 👋")</textarea>
     </div>
 
-    <!-- PREVIEW -->
     <div class="form-group">
         <label>👀 Preview highlight:</label>
         <div class="preview-wrap">
@@ -349,13 +331,11 @@
         </div>
     </div>
 
-    <!-- DOWNLOAD -->
     <button class="download-btn" id="downloadBtn">⬇️ Download file</button>
 </div>
 
 <script>
     (function() {
-        // ===== DOM refs =====
         const body = document.body;
         const fileNameInput = document.getElementById('fileName');
         const codeInput = document.getElementById('codeInput');
@@ -364,12 +344,9 @@
         const settingsPanel = document.getElementById('settingsPanel');
         const settingsToggle = document.getElementById('settingsToggle');
         const fontSizeInput = document.getElementById('fontSizeInput');
-
-        // ===== THEME =====
         const themeBtns = document.querySelectorAll('.theme-btn');
         const STORAGE_KEY = 'codeDownloader_settings';
 
-        // load settings from localStorage
         function loadSettings() {
             try {
                 const raw = localStorage.getItem(STORAGE_KEY);
@@ -382,7 +359,7 @@
                     fontSizeInput.value = data.fontSize;
                     applyFontSize(data.fontSize);
                 }
-            } catch (_) { /* ignore */ }
+            } catch (_) {}
         }
 
         function saveSettings() {
@@ -392,7 +369,7 @@
                     fontSize: parseInt(fontSizeInput.value, 10) || 15
                 };
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-            } catch (_) { /* ignore */ }
+            } catch (_) {}
         }
 
         function getCurrentTheme() {
@@ -405,7 +382,6 @@
         }
 
         function setTheme(themeName) {
-            // remove all theme classes
             body.className = body.className
                 .split(' ')
                 .filter(cls => !cls.startsWith('theme-'))
@@ -413,29 +389,23 @@
             if (themeName !== 'default') {
                 body.classList.add('theme-' + themeName);
             }
-            // update active button
             themeBtns.forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.theme === themeName);
             });
-            // re-highlight for theme colors
             updateHighlight();
         }
 
-        // ===== FONT SIZE =====
         function applyFontSize(size) {
             const val = parseInt(size, 10);
             if (isNaN(val) || val < 8) return;
             const px = val + 'px';
-            // apply to textarea, preview, and code inside preview
             codeInput.style.fontSize = px;
             previewCode.style.fontSize = px;
-            // also apply to any code in preview
             document.querySelectorAll('.preview-wrap code, .preview-wrap pre').forEach(el => {
                 el.style.fontSize = px;
             });
         }
 
-        // ===== HIGHLIGHT =====
         function getLanguageFromFileName(name) {
             const ext = name.split('.').pop().toLowerCase();
             const map = {
@@ -479,11 +449,9 @@
             const lang = getLanguageFromFileName(fileName);
             previewCode.textContent = code || ' ';
             previewCode.className = 'language-' + lang;
-            // highlight with hljs
             hljs.highlightElement(previewCode);
         }
 
-        // ===== DOWNLOAD =====
         function downloadFile() {
             const content = codeInput.value || '';
             const fileName = fileNameInput.value.trim() || 'code.txt';
@@ -498,22 +466,17 @@
             URL.revokeObjectURL(url);
         }
 
-        // ===== EVENT BINDING =====
-        // Theme buttons
         themeBtns.forEach(btn => {
             btn.addEventListener('click', function() {
-                const theme = this.dataset.theme;
-                setTheme(theme);
+                setTheme(this.dataset.theme);
                 saveSettings();
             });
         });
 
-        // Settings toggle
         settingsToggle.addEventListener('click', function() {
             settingsPanel.classList.toggle('open');
         });
 
-        // Font size
         fontSizeInput.addEventListener('input', function() {
             const val = parseInt(this.value, 10);
             if (!isNaN(val) && val >= 8) {
@@ -522,40 +485,26 @@
             }
         });
 
-        // File name change → re-highlight
         fileNameInput.addEventListener('input', updateHighlight);
-
-        // Code input → update preview + highlight
         codeInput.addEventListener('input', updateHighlight);
-
-        // Download
         downloadBtn.addEventListener('click', downloadFile);
 
-        // ===== INIT =====
         loadSettings();
-        // ensure default active if none
         if (!document.querySelector('.theme-btn.active')) {
             document.querySelector('.theme-btn[data-theme="default"]')?.classList.add('active');
         }
-        // initial highlight
         updateHighlight();
-        // apply font size once
         const initSize = parseInt(fontSizeInput.value, 10) || 15;
         applyFontSize(initSize);
 
-        // ===== KEYBOARD SHORTCUT: Ctrl+Enter to download =====
         document.addEventListener('keydown', function(e) {
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                 e.preventDefault();
                 downloadFile();
             }
         });
-
-        // ===== AUTO DETECT LANGUAGE =====
-        // show current language in console
-        console.log('🚀 Code Downloader ready! Ctrl+Enter to download.');
     })();
 </script>
 
 </body>
-  </html>
+    </html>
