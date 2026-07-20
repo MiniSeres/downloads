@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Code Downloader</title>
+    
+    <!-- Highlight.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+    
+    <style>
+        /* ===== RESET ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background: #0d1117;
+            color: #e6edf3;
+            transition: background 0.3s, color 0.3s;
+        }
+        
+        /* ===== THEMES ===== */
+        body.theme-matrix {
+            --bg: #0a0f0a;
+            --surface: #0f1a0f;
+            --border: #00ff41;
+            --text: #00ff41;
+            --text-muted: #00cc33;
+            --accent: #00ff41;
+            --shadow: 0 8px 32px rgba(0, 255, 65, 0.1);
+        }
+        body.theme-sky {
+            --bg: #e8f4fd;
+            --surface: #ffffff;
+            --border: #4a9eff;
+            --text: #1a2a4a;
+            --text-muted: #3a5a7a;
+            --accent: #4a9eff;
+            --shadow: 0 8px 32px rgba(74, 158, 255, 0.15);
+        }
+        body.theme-classic {
+            --bg: #f5f5f5;
+            --surface: #ffffff;
+            --border: #2c3e50;
+            --text: #2c3e50;
+            --text-muted: #5a6a7a;
+            --accent: #2c3e50;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+        }
+        body.theme-dracula {
+            --bg: #282a36;
+            --surface: #1e1f2b;
+            --border: #bd93f9;
+            --text: #f8f8f2;
+            --text-muted: #a0a0b0;
+            --accent: #bd93f9;
+            --shadow: 0 8px 32px rgba(189, 147, 249, 0.15);
+        }
+        /* default: dark */
+        body {
+            --bg: #0d1117;
+            --surface: #161b22;
+            --border: #30363d;
+            --text: #e6edf3;
+            --text-muted: #8b949e;
+            --accent: #58a6ff;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            background: var(--bg);
+            color: var(--text);
+        }
+        
+        /* ===== CONTAINER ===== */
+        .container {
+            width: 100%;
+            max-width: 860px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: var(--shadow);
+            transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+        
+        /* ===== HEADER ===== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        /* ===== SETTINGS ===== */
+        .settings-toggle {
+            background: var(--border);
+            color: var(--text);
+            border: none;
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+        .settings-toggle:hover {
+            opacity: 0.7;
+        }
+        
+        .settings-panel {
+            display: none;
+            flex-wrap: wrap;
+            gap: 16px 24px;
+            padding: 16px 0 20px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+        .settings-panel.open {
+            display: flex;
+        }
+        .settings-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .settings-group label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+        .theme-btn {
+            background: transparent;
+            border: 2px solid var(--border);
+            color: var(--text);
+            padding: 4px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+        .theme-btn:hover {
+            border-color: var(--accent);
+        }
+        .theme-btn.active {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: #fff;
+        }
+        .font-size-input {
+            width: 60px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 14px;
+        }
+        
+        /* ===== FORM ===== */
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--text-muted);
+        }
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 15px;
+            font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+            transition: border-color 0.2s;
+            resize: vertical;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
+        }
+        .form-group textarea {
+            min-height: 320px;
+            line-height: 1.6;
+            tab-size: 2;
+        }
+        
+        /* ===== PREVIEW HIGHLIGHT ===== */
+        .preview-wrap {
+            position: relative;
+            margin-top: 6px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+        .preview-wrap pre {
+            margin: 0;
+            padding: 16px;
+            background: var(--bg);
+            min-height: 80px;
+            max-height: 400px;
+            overflow: auto;
+            font-size: 15px;
+            font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+            line-height: 1.6;
+        }
+        .preview-wrap pre code {
+            background: transparent !important;
+            padding: 0 !important;
+            font-family: inherit;
+            font-size: inherit;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        
+        /* ===== DOWNLOAD BTN ===== */
+        .download-btn {
+            width: 100%;
+            padding: 14px;
+            margin-top: 8px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .download-btn:hover {
+            opacity: 0.85;
+            transform: scale(1.01);
+        }
+        .download-btn:active {
+            transform: scale(0.97);
+        }
+        
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 640px) {
+            .container {
+                padding: 20px;
+            }
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .settings-panel {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .settings-group {
+                flex-wrap: wrap;
+            }
+        }
+        
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- HEADER -->
+    <div class="header">
+        <h1>📦 Code Downloader</h1>
+        <div class="header-actions">
+            <button class="settings-toggle" id="settingsToggle">⚙️ Settings</button>
+        </div>
+    </div>
+
+    <!-- SETTINGS PANEL -->
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-group">
+            <label>🎨 Theme:</label>
+            <button class="theme-btn" data-theme="default">Default</button>
+            <button class="theme-btn" data-theme="matrix">🌿 Matrix</button>
+            <button class="theme-btn" data-theme="sky">☁️ Sky</button>
+            <button class="theme-btn" data-theme="classic">📄 Classic</button>
+            <button class="theme-btn" data-theme="dracula">🧛 Dracula</button>
+        </div>
+        <div class="settings-group">
+            <label>🔤 Font size:</label>
+            <input class="font-size-input" id="fontSizeInput" type="number" value="15" min="10" max="28" />
+            <span style="font-size:13px; color:var(--text-muted);">px</span>
+        </div>
+    </div>
+
+    <!-- FORM -->
+    <div class="form-group">
+        <label for="fileName">📄 Tên file (ví dụ: script.js, main.go, style.css)</label>
+        <input id="fileName" type="text" placeholder="main.py" value="code.txt" />
+    </div>
+
+    <div class="form-group">
+        <label for="codeInput">✏️ Viết code của bro:</label>
+        <textarea id="codeInput" placeholder="Paste hoặc viết code vào đây...">print("Hello, bro! 👋")</textarea>
+    </div>
+
+    <!-- PREVIEW -->
+    <div class="form-group">
+        <label>👀 Preview highlight:</label>
+        <div class="preview-wrap">
+            <pre><code id="previewCode" class="language-plaintext">print("Hello, bro! 👋")</code></pre>
+        </div>
+    </div>
+
+    <!-- DOWNLOAD -->
+    <button class="download-btn" id="downloadBtn">⬇️ Download file</button>
+</div>
+
+<script>
+    (function() {
+        // ===== DOM refs =====
+        const body = document.body;
+        const fileNameInput = document.getElementById('fileName');
+        const codeInput = document.getElementById('codeInput');
+        const previewCode = document.getElementById('previewCode');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const settingsPanel = document.getElementById('settingsPanel');
+        const settingsToggle = document.getElementById('settingsToggle');
+        const fontSizeInput = document.getElementById('fontSizeInput');
+
+        // ===== THEME =====
+        const themeBtns = document.querySelectorAll('.theme-btn');
+        const STORAGE_KEY = 'codeDownloader_settings';
+
+        // load settings from localStorage
+        function loadSettings() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return;
+                const data = JSON.parse(raw);
+                if (data.theme) {
+                    setTheme(data.theme);
+                }
+                if (data.fontSize) {
+                    fontSizeInput.value = data.fontSize;
+                    applyFontSize(data.fontSize);
+                }
+            } catch (_) { /* ignore */ }
+        }
+
+        function saveSettings() {
+            try {
+                const data = {
+                    theme: getCurrentTheme(),
+                    fontSize: parseInt(fontSizeInput.value, 10) || 15
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            } catch (_) { /* ignore */ }
+        }
+
+        function getCurrentTheme() {
+            for (const btn of themeBtns) {
+                if (btn.classList.contains('active')) {
+                    return btn.dataset.theme;
+                }
+            }
+            return 'default';
+        }
+
+        function setTheme(themeName) {
+            // remove all theme classes
+            body.className = body.className
+                .split(' ')
+                .filter(cls => !cls.startsWith('theme-'))
+                .join(' ');
+            if (themeName !== 'default') {
+                body.classList.add('theme-' + themeName);
+            }
+            // update active button
+            themeBtns.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.theme === themeName);
+            });
+            // re-highlight for theme colors
+            updateHighlight();
+        }
+
+        // ===== FONT SIZE =====
+        function applyFontSize(size) {
+            const val = parseInt(size, 10);
+            if (isNaN(val) || val < 8) return;
+            const px = val + 'px';
+            // apply to textarea, preview, and code inside preview
+            codeInput.style.fontSize = px;
+            previewCode.style.fontSize = px;
+            // also apply to any code in preview
+            document.querySelectorAll('.preview-wrap code, .preview-wrap pre').forEach(el => {
+                el.style.fontSize = px;
+            });
+        }
+
+        // ===== HIGHLIGHT =====
+        function getLanguageFromFileName(name) {
+            const ext = name.split('.').pop().toLowerCase();
+            const map = {
+                'js': 'javascript',
+                'ts': 'typescript',
+                'py': 'python',
+                'go': 'go',
+                'java': 'java',
+                'c': 'c',
+                'cpp': 'cpp',
+                'cs': 'csharp',
+                'rb': 'ruby',
+                'php': 'php',
+                'html': 'html',
+                'css': 'css',
+                'json': 'json',
+                'xml': 'xml',
+                'yml': 'yaml',
+                'yaml': 'yaml',
+                'toml': 'toml',
+                'md': 'markdown',
+                'sh': 'bash',
+                'bash': 'bash',
+                'sql': 'sql',
+                'swift': 'swift',
+                'kt': 'kotlin',
+                'rs': 'rust',
+                'lua': 'lua',
+                'r': 'r',
+                'scala': 'scala',
+                'dart': 'dart',
+                'vue': 'vue',
+                'svelte': 'svelte'
+            };
+            return map[ext] || 'plaintext';
+        }
+
+        function updateHighlight() {
+            const code = codeInput.value || '';
+            const fileName = fileNameInput.value || 'code.txt';
+            const lang = getLanguageFromFileName(fileName);
+            previewCode.textContent = code || ' ';
+            previewCode.className = 'language-' + lang;
+            // highlight with hljs
+            hljs.highlightElement(previewCode);
+        }
+
+        // ===== DOWNLOAD =====
+        function downloadFile() {
+            const content = codeInput.value || '';
+            const fileName = fileNameInput.value.trim() || 'code.txt';
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // ===== EVENT BINDING =====
+        // Theme buttons
+        themeBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const theme = this.dataset.theme;
+                setTheme(theme);
+                saveSettings();
+            });
+        });
+
+        // Settings toggle
+        settingsToggle.addEventListener('click', function() {
+            settingsPanel.classList.toggle('open');
+        });
+
+        // Font size
+        fontSizeInput.addEventListener('input', function() {
+            const val = parseInt(this.value, 10);
+            if (!isNaN(val) && val >= 8) {
+                applyFontSize(val);
+                saveSettings();
+            }
+        });
+
+        // File name change → re-highlight
+        fileNameInput.addEventListener('input', updateHighlight);
+
+        // Code input → update preview + highlight
+        codeInput.addEventListener('input', updateHighlight);
+
+        // Download
+        downloadBtn.addEventListener('click', downloadFile);
+
+        // ===== INIT =====
+        loadSettings();
+        // ensure default active if none
+        if (!document.querySelector('.theme-btn.active')) {
+            document.querySelector('.theme-btn[data-theme="default"]')?.classList.add('active');
+        }
+        // initial highlight
+        updateHighlight();
+        // apply font size once
+        const initSize = parseInt(fontSizeInput.value, 10) || 15;
+        applyFontSize(initSize);
+
+        // ===== KEYBOARD SHORTCUT: Ctrl+Enter to download =====
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                downloadFile();
+            }
+        });
+
+        // ===== AUTO DETECT LANGUAGE =====
+        // show current language in console
+        console.log('🚀 Code Downloader ready! Ctrl+Enter to download.');
+    })();
+</script>
+
+</body>
+  </html>
